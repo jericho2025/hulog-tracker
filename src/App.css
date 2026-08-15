@@ -257,32 +257,55 @@ h2 {
 .record-item {
   display: flex;
   justify-content: space-between;
+  align-items: center;
   gap: 12px;
   padding: 9px 0;
   border-bottom: 1px solid #eeeeee;
 }
 
-.record-item div {
+.record-details {
   display: grid;
   gap: 2px;
 }
 
-.record-item strong {
+.record-details strong {
   color: #111;
   font-size: 13px;
 }
 
-.record-item span {
+.record-details span {
   color: #666;
   font-size: 12px;
 }
 
-.record-item p {
+.record-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.record-actions p {
   margin: 0;
   color: #111;
   font-size: 13px;
   font-weight: 700;
   white-space: nowrap;
+}
+
+.delete-button {
+  min-height: 27px;
+  border: 1px solid #d0d0d0;
+  border-radius: 3px;
+  background: #fff;
+  color: #9b1111;
+  padding: 0 8px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.delete-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .empty {

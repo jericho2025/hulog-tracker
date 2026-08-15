@@ -57,6 +57,7 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
+  const [deletingId, setDeletingId] = useState(null);
 
   async function loadRecords() {
     if (!supabase) {
@@ -160,6 +161,39 @@ function App() {
     setSaving(false);
   }
 
+  async function handleDelete(record) {
+    if (!supabase) {
+      setMessage("Connect Supabase first.");
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `Delete ${record.person} record ${peso(record.amount)} on ${formatDate(
+        record.saved_at
+      )}?`
+    );
+
+    if (!confirmed) return;
+
+    setDeletingId(record.id);
+    setMessage("");
+
+    const { error } = await supabase
+      .from("savings_records")
+      .delete()
+      .eq("id", record.id);
+
+    if (error) {
+      setMessage("Record was not deleted.");
+      setDeletingId(null);
+      return;
+    }
+
+    setRecords((current) => current.filter((item) => item.id !== record.id));
+    setMessage("Record deleted.");
+    setDeletingId(null);
+  }
+
   return (
     <main className="page">
       <header className="topbar">
@@ -229,11 +263,9 @@ function App() {
       </section>
 
       <section className="card">
-        <div className="card-title row-title">
-          <div>
-            <h2>Monthly Status</h2>
-            <p>Due every 15–30</p>
-          </div>
+        <div className="card-title">
+          <h2>Monthly Status</h2>
+          <p>Due every 15–30</p>
         </div>
 
         <div className="status-list">
@@ -306,14 +338,25 @@ function App() {
           <div className="record-list">
             {visibleRecords.map((record) => (
               <div className="record-item" key={record.id}>
-                <div>
+                <div className="record-details">
                   <strong>
                     {activeView === "All" ? record.person : "Savings"}
                   </strong>
                   <span>{formatDate(record.saved_at)}</span>
                 </div>
 
-                <p>{peso(record.amount)}</p>
+                <div className="record-actions">
+                  <p>{peso(record.amount)}</p>
+
+                  <button
+                    type="button"
+                    className="delete-button"
+                    onClick={() => handleDelete(record)}
+                    disabled={deletingId === record.id}
+                  >
+                    {deletingId === record.id ? "..." : "Delete"}
+                  </button>
+                </div>
               </div>
             ))}
           </div>
