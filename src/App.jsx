@@ -12,7 +12,11 @@ function peso(amount) {
 function toDateInputValue(date = new Date()) {
   const offset = date.getTimezoneOffset();
   const localDate = new Date(date.getTime() - offset * 60 * 1000);
-  return localDate.toISOString().slice(0, 16);
+  return localDate.toISOString().slice(0, 10);
+}
+
+function dateInputToIso(dateValue) {
+  return new Date(`${dateValue}T12:00:00`).toISOString();
 }
 
 function formatDate(date) {
@@ -58,6 +62,7 @@ function App() {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
   const [deletingId, setDeletingId] = useState(null);
+  const [recordToDelete, setRecordToDelete] = useState(null);
 
   async function loadRecords() {
     if (!supabase) {
@@ -142,7 +147,7 @@ function App() {
       .insert({
         person: selectedPerson,
         amount: numericAmount,
-        saved_at: new Date(savedAt).toISOString(),
+        saved_at: dateInputToIso(savedAt),
       })
       .select()
       .single();
@@ -157,31 +162,24 @@ function App() {
     setAmount("");
     setSavedAt(toDateInputValue());
     setActiveView(selectedPerson);
-    setMessage("Added successfully.");
+    setMessage(
+      `${selectedPerson} ${peso(numericAmount)} added for ${formatDate(
+        data.saved_at
+      )}.`
+    );
     setSaving(false);
   }
 
-  async function handleDelete(record) {
-    if (!supabase) {
-      setMessage("Connect Supabase first.");
-      return;
-    }
+  async function confirmDelete() {
+    if (!recordToDelete || !supabase) return;
 
-    const confirmed = window.confirm(
-      `Delete ${record.person} record ${peso(record.amount)} on ${formatDate(
-        record.saved_at
-      )}?`
-    );
-
-    if (!confirmed) return;
-
-    setDeletingId(record.id);
+    setDeletingId(recordToDelete.id);
     setMessage("");
 
     const { error } = await supabase
       .from("savings_records")
       .delete()
-      .eq("id", record.id);
+      .eq("id", recordToDelete.id);
 
     if (error) {
       setMessage("Record was not deleted.");
@@ -189,9 +187,15 @@ function App() {
       return;
     }
 
-    setRecords((current) => current.filter((item) => item.id !== record.id));
-    setMessage("Record deleted.");
+    setRecords((current) =>
+      current.filter((item) => item.id !== recordToDelete.id)
+    );
+
+    setMessage(
+      `${recordToDelete.person} ${peso(recordToDelete.amount)} record deleted.`
+    );
     setDeletingId(null);
+    setRecordToDelete(null);
   }
 
   return (
@@ -248,7 +252,7 @@ function App() {
           <label>
             Date
             <input
-              type="datetime-local"
+              type="date"
               value={savedAt}
               onChange={(event) => setSavedAt(event.target.value)}
             />
@@ -351,10 +355,10 @@ function App() {
                   <button
                     type="button"
                     className="delete-button"
-                    onClick={() => handleDelete(record)}
+                    onClick={() => setRecordToDelete(record)}
                     disabled={deletingId === record.id}
                   >
-                    {deletingId === record.id ? "..." : "Delete"}
+                    Delete
                   </button>
                 </div>
               </div>
@@ -362,6 +366,41 @@ function App() {
           </div>
         )}
       </section>
+
+      {recordToDelete && (
+        <div className="modal-backdrop">
+          <div className="delete-modal">
+            <p className="modal-label">Confirm Delete</p>
+            <h2>Delete this record?</h2>
+
+            <div className="delete-preview">
+              <span>{recordToDelete.person}</span>
+              <strong>{peso(recordToDelete.amount)}</strong>
+              <small>{formatDate(recordToDelete.saved_at)}</small>
+            </div>
+
+            <div className="modal-actions">
+              <button
+                type="button"
+                className="cancel-action"
+                onClick={() => setRecordToDelete(null)}
+                disabled={deletingId === recordToDelete.id}
+              >
+                Cancel
+              </button>
+
+              <button
+                type="button"
+                className="confirm-delete-action"
+                onClick={confirmDelete}
+                disabled={deletingId === recordToDelete.id}
+              >
+                {deletingId === recordToDelete.id ? "Deleting..." : "Delete"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
