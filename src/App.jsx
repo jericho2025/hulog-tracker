@@ -9,22 +9,34 @@ function peso(amount) {
   }).format(Number(amount || 0));
 }
 
-function toDateInputValue(date = new Date()) {
-  const offset = date.getTimezoneOffset();
-  const localDate = new Date(date.getTime() - offset * 60 * 1000);
-  return localDate.toISOString().slice(0, 10);
-}
-
-function dateInputToIso(dateValue) {
-  return new Date(`${dateValue}T12:00:00`).toISOString();
-}
-
 function formatDate(date) {
   return new Date(date).toLocaleDateString("en-PH", {
     year: "numeric",
     month: "short",
     day: "numeric",
   });
+}
+
+function formatTime(date) {
+  return new Date(date).toLocaleTimeString("en-PH", {
+    hour: "numeric",
+    minute: "2-digit",
+  });
+}
+
+function formatRecordDateTime(date) {
+  const savedDate = new Date(date);
+
+  const isOldSeededRecord =
+    savedDate.getHours() === 12 &&
+    savedDate.getMinutes() === 0 &&
+    savedDate.getSeconds() === 0;
+
+  if (isOldSeededRecord) {
+    return formatDate(date);
+  }
+
+  return `${formatDate(date)} • ${formatTime(date)}`;
 }
 
 function getMonthlyStatus(records, person) {
@@ -57,7 +69,6 @@ function App() {
   const [selectedPerson, setSelectedPerson] = useState("Jec");
   const [activeView, setActiveView] = useState("Jec");
   const [amount, setAmount] = useState("");
-  const [savedAt, setSavedAt] = useState(toDateInputValue());
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
@@ -139,6 +150,8 @@ function App() {
       return;
     }
 
+    const currentDateTime = new Date();
+
     setSaving(true);
     setMessage("");
 
@@ -147,7 +160,7 @@ function App() {
       .insert({
         person: selectedPerson,
         amount: numericAmount,
-        saved_at: dateInputToIso(savedAt),
+        saved_at: currentDateTime.toISOString(),
       })
       .select()
       .single();
@@ -160,10 +173,9 @@ function App() {
 
     setRecords((current) => [data, ...current]);
     setAmount("");
-    setSavedAt(toDateInputValue());
     setActiveView(selectedPerson);
     setMessage(
-      `${selectedPerson} ${peso(numericAmount)} added for ${formatDate(
+      `${selectedPerson} ${peso(numericAmount)} added on ${formatRecordDateTime(
         data.saved_at
       )}.`
     );
@@ -249,14 +261,10 @@ function App() {
             />
           </label>
 
-          <label>
-            Date
-            <input
-              type="date"
-              value={savedAt}
-              onChange={(event) => setSavedAt(event.target.value)}
-            />
-          </label>
+          <div className="auto-date-note">
+            <span>Date and time</span>
+            <strong>Automatically saved when you click Add</strong>
+          </div>
 
           <button type="submit" disabled={saving}>
             {saving ? "Adding..." : "Add"}
@@ -346,7 +354,7 @@ function App() {
                   <strong>
                     {activeView === "All" ? record.person : "Savings"}
                   </strong>
-                  <span>{formatDate(record.saved_at)}</span>
+                  <span>{formatRecordDateTime(record.saved_at)}</span>
                 </div>
 
                 <div className="record-actions">
@@ -376,7 +384,7 @@ function App() {
             <div className="delete-preview">
               <span>{recordToDelete.person}</span>
               <strong>{peso(recordToDelete.amount)}</strong>
-              <small>{formatDate(recordToDelete.saved_at)}</small>
+              <small>{formatRecordDateTime(recordToDelete.saved_at)}</small>
             </div>
 
             <div className="modal-actions">

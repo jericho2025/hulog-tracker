@@ -147,6 +147,27 @@ h2 {
   cursor: not-allowed;
 }
 
+.auto-date-note {
+  display: grid;
+  gap: 4px;
+  padding: 10px;
+  border: 1px solid #e2e2e2;
+  border-radius: 3px;
+  background: #fafafa;
+}
+
+.auto-date-note span {
+  color: #333;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.auto-date-note strong {
+  color: #666;
+  font-size: 12px;
+  font-weight: 400;
+}
+
 .message {
   margin: 9px 0 0;
   color: #333;
@@ -314,16 +335,6 @@ h2 {
   font-size: 13px;
 }
 
-@media (min-width: 760px) {
-  .page {
-    width: min(100% - 32px, 760px);
-  }
-
-  .summary-grid {
-    grid-template-columns: repeat(3, 1fr);
-  }
-}
-
 .modal-backdrop {
   position: fixed;
   inset: 0;
@@ -411,4 +422,14 @@ h2 {
 .confirm-delete-action:disabled {
   opacity: 0.65;
   cursor: not-allowed;
+}
+
+@media (min-width: 760px) {
+  .page {
+    width: min(100% - 32px, 760px);
+  }
+
+  .summary-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
 }
