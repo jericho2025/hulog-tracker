@@ -104,6 +104,16 @@ function App() {
     loadRecords();
   }, []);
 
+  useEffect(() => {
+    if (!message) return;
+
+    const timer = setTimeout(() => {
+      setMessage("");
+    }, 3000);
+
+    return () => clearTimeout(timer);
+  }, [message]);
+
   const jecRecords = useMemo(
     () => records.filter((record) => record.person === "Jec"),
     [records]
@@ -270,8 +280,6 @@ function App() {
             {saving ? "Adding..." : "Add"}
           </button>
         </form>
-
-        {message && <p className="message">{message}</p>}
       </section>
 
       <section className="card">
@@ -407,6 +415,12 @@ function App() {
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {message && (
+        <div className="toast-notice">
+          <span>{message}</span>
         </div>
       )}
     </main>
